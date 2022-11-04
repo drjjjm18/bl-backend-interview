@@ -38,11 +38,12 @@ def check_weather():
 
     # parse city from json
     content = request.json
-    # try:
-    city = content['city']
-    # # todo: handle error where no 'city' key
-    # except:
-    #     return
+    try:
+        city = content['city']
+
+    # todo: handle error where no 'city' key
+    except:
+         return
 
     # check for city in db
     existing_city = City.query.filter_by(name=city).first()
