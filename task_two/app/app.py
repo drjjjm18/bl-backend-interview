@@ -47,19 +47,29 @@ def check_weather():
     # check for city in db
     existing_city = City.query.filter_by(name=city).first()
 
-    # if no city or query is > delta (2 hours) old
-    if not existing_city or (existing_city.time > delta):
+    # check if new request is needed
+    if not existing_city or ((datetime.now() - existing_city.time) > delta):
         # request data
         new_city_data = get_weather_data(city)
-        # check response worked
+
+        # check response returned correctly
         if new_city_data['cod'] == 200:
 
             # parse temp and convert to degrees
-            temp = int(new_city_data['main']['temp']-237.15)
+            temp = int(new_city_data['main']['temp']-273.15)
+            # get time
             time_checked = datetime.now()
-            new_city_obj = City(name=city, time=time_checked, temperature=temp)
-            db.session.add(new_city_obj)
-            db.session.commit()
+
+            # if new city add to db
+            if not existing_city:
+                new_city_obj = City(name=city, time=time_checked, temperature=temp)
+                db.session.add(new_city_obj)
+                db.session.commit()
+            # if existing_city update city record
+            else:
+                existing_city.temperature = temp
+                existing_city.time = time_checked
+                db.session.commit()
 
         # error with request - for now assume that's a user error in the request but should be more informative
         else:
